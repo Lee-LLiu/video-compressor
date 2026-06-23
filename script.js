@@ -1,25 +1,14 @@
-const statusDiv =
-    document.getElementById("status");
+alert("V2版本已经加载");
 
-let ffmpegLoaded = false;
+document.addEventListener("DOMContentLoaded", function () {
 
-async function loadFFmpeg() {
+    const btn = document.getElementById("compressBtn");
 
-    if (ffmpegLoaded) return;
+    btn.addEventListener("click", function () {
 
-    statusDiv.innerHTML =
-        "正在加载FFmpeg（首次约10~20秒）...";
+        document.getElementById("status").innerHTML =
+            "这是新的 script.js 文件";
 
-    ffmpegLoaded = true;
-
-    statusDiv.innerHTML =
-        "FFmpeg加载成功";
-}
-
-document
-.getElementById("compressBtn")
-.addEventListener("click", async () => {
-
-    await loadFFmpeg();
+    });
 
 });
