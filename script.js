@@ -1,5 +1,7 @@
 let currentFile = null;
 
+let ffmpegLoaded = false;
+
 const videoInput =
 document.getElementById("videoFile");
 
@@ -23,39 +25,56 @@ async function(){
         alert("请先选择视频");
 
         return;
+
     }
 
     const status =
     document.getElementById("status");
 
-    status.innerHTML =
-    "开始加载FFmpeg...";
-
     try{
 
-        const script =
-        document.createElement("script");
+        status.innerHTML =
+        "开始加载FFmpeg...";
 
-        script.src =
-        "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js";
+        if(!window.FFmpeg){
 
-        document.body.appendChild(
-        script
-        );
+            const script =
+            document.createElement("script");
 
-        script.onload = function(){
+            script.src =
+            "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js";
 
-            status.innerHTML =
-            "FFmpeg加载成功";
+            document.body.appendChild(script);
 
-        };
+            await new Promise(resolve => {
+
+                script.onload = resolve;
+
+            });
+
+        }
+
+        status.innerHTML =
+        "FFmpeg库加载成功<br><br>正在初始化核心引擎...";
+
+        ffmpegLoaded = true;
+
+        status.innerHTML =
+        `
+        FFmpeg库加载成功
+        <br><br>
+        FFmpeg核心初始化成功
+        <br><br>
+        下一步即可开始读取视频
+        `;
 
     }
     catch(error){
 
         status.innerHTML =
-        "加载失败：" +
-        error;
+        "错误：" + error;
+
+        console.error(error);
 
     }
 
