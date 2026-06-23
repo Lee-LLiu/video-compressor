@@ -4,13 +4,16 @@
 <head>
 <meta charset="UTF-8">
 <title>免费视频压缩工具</title>
+
+<link rel="stylesheet" href="style.css">
+
 </head>
 
 <body>
 
-<h1>🎬 免费视频压缩工具</h1>
+<h1>🎬免费视频压缩工具</h1>
 
-<input type="file" id="videoInput">
+<input type="file" id="videoFile">
 
 <br><br>
 
@@ -18,41 +21,9 @@
 开始压缩
 </button>
 
-<br><br>
-
 <div id="status"></div>
 
-<script type="module">
-
-import { FFmpeg }
-from 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm/index.js';
-
-const ffmpeg = new FFmpeg();
-
-document
-.getElementById("compressBtn")
-.addEventListener("click", async () => {
-
-    const file =
-        document.getElementById("videoInput")
-        .files[0];
-
-    if(!file){
-        alert("请选择视频");
-        return;
-    }
-
-    document.getElementById("status")
-    .innerHTML = "正在加载FFmpeg...";
-
-    await ffmpeg.load();
-
-    document.getElementById("status")
-    .innerHTML = "FFmpeg加载成功";
-
-});
-
-</script>
+<script src="script.js"></script>
 
 </body>
 
