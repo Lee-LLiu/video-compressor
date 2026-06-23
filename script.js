@@ -1,14 +1,25 @@
-document.addEventListener("DOMContentLoaded", ()=>{
+const statusDiv =
+    document.getElementById("status");
 
-    const btn =
-        document.getElementById("compressBtn");
+let ffmpegLoaded = false;
 
-    btn.addEventListener("click", ()=>{
+async function loadFFmpeg() {
 
-        document.getElementById("status")
-            .innerHTML =
-            "按钮工作正常";
+    if (ffmpegLoaded) return;
 
-    });
+    statusDiv.innerHTML =
+        "正在加载FFmpeg（首次约10~20秒）...";
+
+    ffmpegLoaded = true;
+
+    statusDiv.innerHTML =
+        "FFmpeg加载成功";
+}
+
+document
+.getElementById("compressBtn")
+.addEventListener("click", async () => {
+
+    await loadFFmpeg();
 
 });
