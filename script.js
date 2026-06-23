@@ -1,7 +1,5 @@
 let currentFile = null;
 
-let ffmpegLoaded = false;
-
 const videoInput =
 document.getElementById("videoFile");
 
@@ -20,6 +18,9 @@ document
 "click",
 async function(){
 
+    const status =
+    document.getElementById("status");
+
     if(!currentFile){
 
         alert("请先选择视频");
@@ -28,51 +29,46 @@ async function(){
 
     }
 
-    const status =
-    document.getElementById("status");
-
     try{
 
         status.innerHTML =
-        "开始加载FFmpeg...";
+        "正在读取视频文件...";
 
-        if(!window.FFmpeg){
+        const fileBuffer =
+        await currentFile.arrayBuffer();
 
-            const script =
-            document.createElement("script");
+        const fileSizeMB =
+        (
+            fileBuffer.byteLength
+            /
+            1024
+            /
+            1024
+        ).toFixed(2);
 
-            script.src =
-            "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js";
+        status.innerHTML = `
+        文件读取成功<br><br>
 
-            document.body.appendChild(script);
-
-            await new Promise(resolve => {
-
-                script.onload = resolve;
-
-            });
-
-        }
-
-        status.innerHTML =
-        "FFmpeg库加载成功<br><br>正在初始化核心引擎...";
-
-        ffmpegLoaded = true;
-
-        status.innerHTML =
-        `
-        FFmpeg库加载成功
+        文件名：
+        ${currentFile.name}
         <br><br>
-        FFmpeg核心初始化成功
+
+        文件大小：
+        ${fileSizeMB} MB
         <br><br>
-        下一步即可开始读取视频
+
+        已准备交给FFmpeg处理
+        <br><br>
+
+        下一步将开始真正压缩
         `;
 
     }
     catch(error){
 
         status.innerHTML =
-        "错误：" + error;
+        "读取失败：" +
+        error;
 
         console.error(error);
 
