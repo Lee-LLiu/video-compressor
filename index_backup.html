@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta charset="UTF-8">
+<title>免费视频压缩工具（完整版）</title>
+
+<style>
+body { font-family: Arial; padding: 20px; }
+#info { margin-top: 20px; }
+button { padding: 10px 15px; margin-top: 10px; }
+</style>
+
+</head>
+
+<body>
+
+<h1>🎬 免费视频压缩工具（FFmpeg版）</h1>
+
+<input type="file" id="videoFile" accept="video/*">
+
+<br><br>
+
+<button id="compressBtn">开始压缩</button>
+
+<div id="info"></div>
+
+<script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/ffmpeg.min.js"></script>
+
+<script>
+
+const { createFFmpeg, fetchFile } = FFmpeg;
+
+const ffmpeg = createFFmpeg({
+    log: true
+});
+
+let fileData = null;
+
+const input = document.getElementById("videoFile");
+const info = document.getElementById("info");
+
+input.addEventListener("change", async (e) => {
+
+    fileData = e.target.files[0];
+    if (!fileData) return;
+
+    const video = document.createElement("video");
+    const url = URL.createObjectURL(fileData);
+
+    video.src = url;
+    video.preload = "metadata";
+
+    video.onloadedmetadata = () => {
+
+        info.innerHTML = `
+            <p><b>文件名：</b>${fileData.name}</p>
+            <p><b>大小：</b>${(fileData.size/1024/1024).toFixed(2)} MB</p>
+            <p><b>分辨率：</b>${video.videoWidth} × ${video.videoHeight}</p>
+            <p><b>时长：</b>${Math.floor(video.duration)} 秒</p>
+        `;
+    };
+
+});
+
+document.getElementById("compressBtn").addEventListener("click", async () => {
+
+    if (!fileData) {
+        alert("请先选择视频");
+        return;
+    }
+
+    info.innerHTML += "<p>⏳ 正在加载压缩引擎...</p>";
+
+    if (!ffmpeg.isLoaded()) {
+        await ffmpeg.load();
+    }
+
+    const inputName = "input.mp4";
+    const outputName = "output.mp4";
+
+    ffmpeg.FS("writeFile", inputName, await fetchFile(fileData));
+
+    info.innerHTML += "<p>📦 开始压缩视频...</p>";
+
+    // 👉 压缩参数（你可以改）
+    await ffmpeg.run(
+        "-i", inputName,
+        "-vcodec", "libx264",
+        "-crf", "28",
+        "-preset", "fast",
+        "-vf", "scale=iw*0.8:ih*0.8",
+        outputName
+    );
+
+    const data = ffmpeg.FS("readFile", outputName);
+
+    const blob = new Blob([data.buffer], { type: "video/mp4" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "compressed.mp4";
+    a.innerText = "⬇️ 下载压缩视频";
+    a.style.display = "block";
+    a.style.marginTop = "20px";
+
+    info.appendChild(a);
+
+    info.innerHTML += "<p>✅ 压缩完成</p>";
+
+});
+
+</script>
+
+</body>
+
+</html>
