@@ -1,77 +1,69 @@
 let currentFile = null;
 
-const videoInput =
-document.getElementById("videoFile");
+const videoInput = document.getElementById("videoFile");
 
-videoInput.addEventListener(
-"change",
-function(e){
+const status = document.getElementById("status");
 
-    currentFile =
-    e.target.files[0];
+const API_URL = "https://video-compressor-api-nl0b.onrender.com/upload";
 
+videoInput.addEventListener("change", function (e) {
+    currentFile = e.target.files[0];
+
+    if (currentFile) {
+        status.innerHTML = `
+        已选择文件<br><br>
+        文件名：${currentFile.name}<br>
+        大小：${(currentFile.size / 1024 / 1024).toFixed(2)} MB
+        `;
+    }
 });
 
-document
-.getElementById("compressBtn")
-.addEventListener(
-"click",
-async function(){
 
-    const status =
-    document.getElementById("status");
+document.getElementById("compressBtn").addEventListener("click", async function () {
 
-    if(!currentFile){
-
+    if (!currentFile) {
         alert("请先选择视频");
-
         return;
-
     }
 
-    try{
+    const formData = new FormData();
+    formData.append("video", currentFile);
 
-        status.innerHTML =
-        "正在读取视频文件...";
+    try {
+        status.innerHTML = "⏳ 正在上传到服务器...";
 
-        const fileBuffer =
-        await currentFile.arrayBuffer();
+        const response = await fetch(API_URL, {
+            method: "POST",
+            body: formData
+        });
 
-        const fileSizeMB =
-        (
-            fileBuffer.byteLength
-            /
-            1024
-            /
-            1024
-        ).toFixed(2);
+        const data = await response.json();
 
-        status.innerHTML = `
-        文件读取成功<br><br>
+        console.log("服务器返回：", data);
 
-        文件名：
-        ${currentFile.name}
-        <br><br>
+        if (data.success) {
 
-        文件大小：
-        ${fileSizeMB} MB
-        <br><br>
+            const downloadLink =
+                "https://video-compressor-api-nl0b.onrender.com" + data.download_url;
 
-        已准备交给FFmpeg处理
-        <br><br>
+            status.innerHTML = `
+                ✅ 压缩完成！<br><br>
 
-        下一步将开始真正压缩
-        `;
+                文件名：${data.filename}<br>
+                压缩后大小：${(data.output_size_bytes / 1024 / 1024).toFixed(2)} MB<br><br>
 
-    }
-    catch(error){
+                <a href="${downloadLink}" target="_blank">
+                    ⬇ 点击下载压缩视频
+                </a>
+            `;
 
-        status.innerHTML =
-        "读取失败：" +
-        error;
+        } else {
+            status.innerHTML = "❌ 压缩失败：" + data.message;
+        }
 
+    } catch (error) {
         console.error(error);
-
+        status.innerHTML = "❌ 请求失败：" + error.message;
     }
 
 });
