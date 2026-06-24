@@ -3,7 +3,7 @@ let currentFile = null;
 const videoInput = document.getElementById("videoFile");
 const status = document.getElementById("status");
 
-const API_URL = "https://video-compressor-api-nl0b.onrender.com/upload";
+const API_BASE = "https://video-compressor-api-nl0b.onrender.com";
 
 videoInput.addEventListener("change", function (e) {
     currentFile = e.target.files[0];
@@ -27,34 +27,49 @@ document.getElementById("compressBtn").addEventListener("click", async function 
     formData.append("video", currentFile);
 
     try {
-        status.innerHTML = "⏳ 正在上传并压缩，请稍候...";
+        status.innerHTML = "⏳ 正在上传...";
 
-        const response = await fetch(API_URL, {
+        const res = await fetch(`${API_BASE}/upload`, {
             method: "POST",
             body: formData
         });
 
-        const data = await response.json();
+        const data = await res.json();
 
-        if (data.success) {
-            const downloadUrl = data.download_url;
-            const originalMB = (data.original_size / 1024 / 1024).toFixed(2);
-            const compressedMB = (data.compressed_size / 1024 / 1024).toFixed(2);
-            const ratio = ((1 - data.compressed_size / data.original_size) * 100).toFixed(1);
-
-            status.innerHTML = `
-                ✅ 压缩完成！<br><br>
-                📄 文件名：${data.filename}<br>
-                📦 原始大小：${originalMB} MB<br>
-                🗜 压缩后大小：${compressedMB} MB<br>
-                📉 压缩率：${ratio}%<br><br>
-                <a href="${downloadUrl}" target="_blank">⬇ 点击下载压缩视频</a>
-            `;
-        } else {
-            status.innerHTML = "❌ 压缩失败：" + data.message;
+        if (!data.success) {
+            status.innerHTML = "❌ 上传失败";
+            return;
         }
-    } catch (error) {
-        console.error(error);
-        status.innerHTML = "❌ 请求失败：" + error.message;
+
+        const taskId = data.task_id;
+        status.innerHTML = "⏳ 压缩中...（请稍等）";
+
+        // 轮询任务状态
+        const timer = setInterval(async () => {
+            try {
+                const r = await fetch(`${API_BASE}/status/${taskId}`);
+                const t = await r.json();
+
+                if (t.status === "done") {
+                    clearInterval(timer);
+                    const downloadUrl = API_BASE + t.download_url;
+
+                    status.innerHTML = `
+                        ✅ 压缩完成！<br><br>
+                        📦 压缩后大小：${(t.compressed_size / 1024 / 1024).toFixed(2)} MB<br><br>
+                        <a href="${downloadUrl}" target="_blank">⬇ 点击下载</a>
+                    `;
+                } else if (t.status === "error") {
+                    clearInterval(timer);
+                    status.innerHTML = "❌ 压缩失败";
+                }
+            } catch (err) {
+                console.error("轮询错误:", err);
+            }
+        }, 2000);
+
+    } catch (err) {
+        console.error(err);
+        status.innerHTML = "❌ 请求失败：" + err.message;
     }
 });
