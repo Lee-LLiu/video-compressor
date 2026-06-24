@@ -42,9 +42,8 @@ document.getElementById("compressBtn").addEventListener("click", async function 
         }
 
         const taskId = data.task_id;
-        status.innerHTML = "⏳ 压缩中...（请稍等）";
+        status.innerHTML = "⏳ 正在压缩...";
 
-        // 轮询任务状态
         const timer = setInterval(async () => {
             try {
                 const r = await fetch(`${API_BASE}/status/${taskId}`);
@@ -53,18 +52,24 @@ document.getElementById("compressBtn").addEventListener("click", async function 
                 if (t.status === "done") {
                     clearInterval(timer);
                     const downloadUrl = API_BASE + t.download_url;
+                    const originalMB = (t.original_size / 1024 / 1024).toFixed(2);
+                    const compressedMB = (t.compressed_size / 1024 / 1024).toFixed(2);
+                    const ratio = ((1 - t.compressed_size / t.original_size) * 100).toFixed(1);
 
                     status.innerHTML = `
                         ✅ 压缩完成！<br><br>
-                        📦 压缩后大小：${(t.compressed_size / 1024 / 1024).toFixed(2)} MB<br><br>
-                        <a href="${downloadUrl}" target="_blank">⬇ 点击下载</a>
+                        📄 文件名：${t.filename}<br>
+                        📦 原始大小：${originalMB} MB<br>
+                        🗜 压缩后大小：${compressedMB} MB<br>
+                        📉 压缩率：${ratio}%<br><br>
+                        ⬇ <a href="${downloadUrl}" target="_blank">点击下载压缩视频</a>
                     `;
                 } else if (t.status === "error") {
                     clearInterval(timer);
-                    status.innerHTML = "❌ 压缩失败";
+                    status.innerHTML = "❌ 压缩失败：" + t.message;
                 }
             } catch (err) {
-                console.error("轮询错误:", err);
+                console.error("轮询任务状态失败:", err);
             }
         }, 2000);
 
